@@ -3,9 +3,10 @@ import imaplib
 import getpass
 import smtplib
 import email
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
-from email.header import Header, decode_header
+import email.mime.multipart as MIMEMultipart
+import email.mime.text as MIMEText
+import email.header as Header
+from email.header import decode_header
 
 
 
@@ -65,7 +66,7 @@ class DialogMailReader:
         if s:
             if s[0:2] == '"=?':
                 s = s.replace('"', '')
-            s, encoding = decode_header(s)[0]
+            s, encoding = decode_header(str(s))[0]
             if encoding:
                 s = s.decode(encoding)
             return s
@@ -96,34 +97,36 @@ class DialogMailReader:
             _, reponse = mailbox.uid('fetch', id, '(RFC822)')
             for part in reponse:
                 if isinstance(part, tuple):
-                    message = email.message_from_string(part[1])
-                    msg.append(account)
+                    message = email.message_from_bytes(part[1])
+                    msg.append(account[1])
                     for h in ('from', 'return-path','date', 'subject'):
                         msg.append(self.decode_msg(message[h]))
                     for m in message.walk():
                         if m.get_content_type() == 'text/plain':
                             body = m.get_payload(decode = True)
-                            msg.append(self.decode_msg(body).decode('utf-8'))
+                            msg.append(body)
             self.msg_data.append(msg)
         print('\nFetched mail, {} new message(s)\n'.format(len(msg_uids)))
         mailbox.logout()
 
 
     def form_message(self):
-        new_message = MIMEMultipart()
+        new_message = MIMEMultipart.MIMEMultipart()
         new_message['To'] = input('Enter recepient address: ')
-        subj = input('Enter subject: ').decode(sys.stdin.encoding)
-        new_message['Subject'] = Header(subj.encode('utf-8'), 'UTF-8').encode()
+        subj = input('Enter subject: ')
+        new_message['Subject'] = Header.Header(subj.encode('utf-8'), 'UTF-8').encode()
         print('\nEnter/Paste your message. Ctrl-D (or Ctrl-C) to stop editing.\n')
         msg_lines = []
         while True:
             try:
-                line = input('| ').decode(sys.stdin.encoding)
+                line = input('| ')
             except KeyboardInterrupt:
+                break
+            except EOFError:
                 break
             msg_lines.append(line + '\r\n')
         body = ''.join(msg_lines)
-        new_message.attach(MIMEText(body.encode('utf-8'), 'plain', 'utf-8'))
+        new_message.attach(MIMEText.MIMEText(body.encode('utf-8'), 'plain', 'utf-8'))
         return new_message
 
 
@@ -142,11 +145,11 @@ class DialogMailReader:
         if self.msg_data:
             for i in range(0, len(self.msg_data)):
                 print('\n\n')
-                print(u'To: <{}>'.format(self.msg_data[i][0]))
-                print(u'From: {} <{}>'.format(self.msg_data[i][1], self.msg_data[i][2]))
-                print(u'Date: {}'.format(self.msg_data[i][3]))
-                print(u'Subject: {}'.format(self.msg_data[i][4]))
-                print(u'Message:\n\n{} \n\n'.format(self.msg_data[i][5]))
+                print('To: <{}>'.format(self.msg_data[i][0]))
+                print('From: {} <{}>'.format(self.msg_data[i][1], self.msg_data[i][2]))
+                print('Date: {}'.format(self.msg_data[i][3]))
+                print('Subject: {}'.format(self.msg_data[i][4]))
+                print('Message:\n\n{} \n\n'.format((self.msg_data[i][5]).decode('utf-8')))
 
 
 root = DialogMailReader()
@@ -176,4 +179,6 @@ while(True):
     except SystemExit as e:
         pass
     except KeyboardInterrupt:
+        break
+    except EOFError:
         break
