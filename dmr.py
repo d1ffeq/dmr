@@ -104,7 +104,9 @@ class DialogMailReader:
                     for m in message.walk():
                         if m.get_content_type() == 'text/plain':
                             body = m.get_payload(decode = True)
-                            msg.append(body)
+                        elif m.get_content_type() == 'text/html':
+                            body = ('<HTML PLACEHOLDER>\n'.decode('utf-8'))
+                    msg.append(body)
             self.msg_data.append(msg)
         print('\nFetched mail, {} new message(s)\n'.format(len(msg_uids)))
         mailbox.logout()
