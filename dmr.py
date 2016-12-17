@@ -87,8 +87,12 @@ class DialogMailReader:
 
     def fetch_mail(self):
         account, passw = self.server_prompt()
-        mailbox = imaplib.IMAP4_SSL(account[4], int(account[5]))
-        mailbox.login(account[1], passw)
+        try: 
+            mailbox = imaplib.IMAP4_SSL(account[4], int(account[5]))
+            mailbox.login(account[1], passw)
+        except:
+            print('Wrong password or authentication failure')
+            self.fetch_mail()
         selected = mailbox.select('INBOX', readonly = True)
         _, data = mailbox.uid('search', None, 'UNSEEN') 
         msg_uids = data[0].split()
