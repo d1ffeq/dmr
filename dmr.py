@@ -104,11 +104,12 @@ class DialogMailReader:
                     for m in message.walk():
                         if m.get_content_type() == 'text/plain':
                             body = m.get_payload(decode = True)
+                            msg.append(body)
                         elif m.get_content_type() == 'text/html':
-                            body = ('<HTML PLACEHOLDER>\n'.decode('utf-8'))
-                    msg.append(body)
+                            body = (b'<HTML PLACEHOLDER>\n')
+                            msg.append(body)
             self.msg_data.append(msg)
-        print('\nFetched mail, {} new message(s)\n'.format(len(msg_uids)))
+        print('\nFetched mail, {} new message(s)\n for {}'.format(len(msg_uids), account[0]))
         mailbox.logout()
 
 
@@ -151,7 +152,7 @@ class DialogMailReader:
                 print('From: {} <{}>'.format(self.msg_data[i][1], self.msg_data[i][2]))
                 print('Date: {}'.format(self.msg_data[i][3]))
                 print('Subject: {}'.format(self.msg_data[i][4]))
-                print('Message:\n\n{} \n\n'.format((self.msg_data[i][5]).decode('utf-8')))
+                print('Message:\n\n{} \n\n'.format((self.msg_data[i][5].decode('utf-8'))))
 
 
 root = DialogMailReader()
