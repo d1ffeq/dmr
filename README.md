@@ -8,7 +8,7 @@ Account settings are stored in a single text file - servers.cfg
 
 Simply run dmr.py as script:
 
-    python dmr.py
+    python3 dmr.py
 
 
 ##License
